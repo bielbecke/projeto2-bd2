@@ -94,33 +94,33 @@ export default function Servicos() {
   };
 
   const salvarOferta = async (e) => {
-    e.preventDefault();
-    if (
-      !formOferta.id_empresa ||
-      !formOferta.cidade ||
-      !formOferta.nome_servico ||
-      !formOferta.preco_hora
-    )
-      return;
-    setSavingOferta(true);
-    try {
-      const [nome_cidade, estado] = formOferta.cidade.split("::");
-      await criarOferta(
-        Number(formOferta.id_empresa),
-        nome_cidade,
-        estado,
-        formOferta.nome_servico,
-        Number(formOferta.preco_hora)
-      );
-      toast("Preço/hora cadastrado para essa combinação.");
-      setFormOferta(EMPTY_OFERTA);
-      carregar();
-    } catch (err) {
-      toast(err.message, "error");
-    } finally {
-      setSavingOferta(false);
-    }
-  };
+  e.preventDefault();
+  if (
+    !formOferta.id_empresa ||
+    !formOferta.cidade ||
+    !formOferta.nome_servico ||
+    !formOferta.preco_hora
+  )
+    return;
+  setSavingOferta(true);
+  try {
+    const [nome_cidade, estado] = formOferta.cidade.split("::");
+    await criarOferta({
+      id_empresa: Number(formOferta.id_empresa),
+      nome_cidade,
+      estado,
+      nome_servico: formOferta.nome_servico,
+      preco_hora: Number(formOferta.preco_hora),
+    });
+    toast("Preço/hora cadastrado para essa combinação.");
+    setFormOferta(EMPTY_OFERTA);
+    carregar();
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    setSavingOferta(false);
+  }
+};
 
   return (
     <div>

@@ -1,37 +1,21 @@
 "Camada que gerencia o db"
 from typing import Any
-from psycopg2 import pool
+import psycopg2
 from psycopg2.extras import DictCursor
-
-# pool de conexões compartilhado por toda a aplicação: cada requisição pega
-# uma conexão emprestada e devolve no final, em vez de abrir uma conexão
-# TCP nova a cada clique no frontend (e em vez de todo mundo brigar pelo
-# mesmo cursor, que era a causa do KeyError anterior)
-_pool = pool.ThreadedConnectionPool(
-    minconn=1,
-    maxconn=10,
-    dbname="projeto2",
-    user="postgres",
-    password="postgres",
-    host="127.0.0.1",
-    port=5432,
-)
 
 
 class DatabaseManager:
     "classe de gerenciamento do db"
 
     def __init__(self) -> None:
-        self.conn = _pool.getconn()
+        self.conn = psycopg2.connect(
+            dbname="projeto2",
+            user="postgres",
+            password="postgres",
+            host="127.0.0.1",
+            port=5432,
+        )
         self.cursor = self.conn.cursor(cursor_factory=DictCursor)
-
-    def __del__(self) -> None:
-        # devolve a conexão pro pool quando este DatabaseManager for
-        # descartado (fim da requisição), em vez de fechar de vez
-        try:
-            _pool.putconn(self.conn)
-        except Exception:
-            pass
 
     def execute_statement(self, statement: str, params: tuple = ()) -> None:
         "usado para inserções, deleções, alter tables"
@@ -56,6 +40,28 @@ class DatabaseManager:
         except Exception:
             self.conn.rollback()
             raise
+
+    # ------------------------------------------------------------------
+    # Variantes SEM commit automatico, para operacoes de varios passos que
+    # precisam ser tudo-ou-nada (ex: criar um pedido junto com seus itens e
+    # sua equipe). O chamador decide quando dar commit() ou rollback() --
+    # so depois que TODOS os passos derem certo.
+    # ------------------------------------------------------------------
+    def executar_na_transacao(self, statement: str, params: tuple = ()) -> None:
+        "como execute_statement, mas sem commitar"
+        self.cursor.execute(statement, params)
+
+    def executar_returning_na_transacao(self, statement: str, params: tuple = ()) -> dict[str, Any] | None:
+        "como execute_insert_returning, mas sem commitar"
+        self.cursor.execute(statement, params)
+        resultado = self.cursor.fetchone()
+        return dict(resultado) if resultado else None
+
+    def commit(self) -> None:
+        self.conn.commit()
+
+    def rollback(self) -> None:
+        self.conn.rollback()
 
     def execute_select_all(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         "usado para selects no geral"
