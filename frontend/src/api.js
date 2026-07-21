@@ -86,10 +86,27 @@ export const atribuirFuncionario = (id_solicitacao, cpf_func) =>
   });
 
 /* ---------------------------- dashboard ---------------------------- */
-export const getResumo = () => request("/dashboard/resumo");
+export const getResumo = async () => {
+  const data = await request("/dashboard/resumo");
+  return { ...data, faturado: Number(data.faturado) };
+};
+
 export const getQtdPorCidade = () => request("/dashboard/qtd-por-cidade");
-export const getValorPorCidade = () => request("/dashboard/valor-por-cidade");
-export const getTopCidadesValor = () => request("/dashboard/top-cidades-valor");
+
+export const getValorPorCidade = async () => {
+  const data = await request("/dashboard/valor-por-cidade");
+  return data.map((item) => ({ ...item, valor: Number(item.valor) }));
+};
+
+export const getTopCidadesValor = async () => {
+  const data = await request("/dashboard/top-cidades-valor");
+  return data.map((item) => ({ ...item, valor: Number(item.valor) }));
+};
+
 export const getTopCidadesQtd = () => request("/dashboard/top-cidades-qtd");
 export const getTopEmpresasQtd = () => request("/dashboard/top-empresas-qtd");
-export const getTopEmpresasValor = () => request("/dashboard/top-empresas-valor");
+
+export const getTopEmpresasValor = async () => {
+  const data = await request("/dashboard/top-empresas-valor");
+  return data.map((item) => ({ ...item, valor: Number(item.valor) }));
+};
