@@ -93,6 +93,7 @@ export default function Dashboard() {
               dataKey="qtd"
               labelKey="cidade"
               color="#2f5d4f"
+              integer
             />
             <BarChartCard
               title="Valor pago em serviços por cidade"

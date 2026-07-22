@@ -55,7 +55,7 @@ def criar_oferta():
     dados = request.get_json()
     obrigatorios = ["id_empresa", "nome_cidade", "estado", "nome_servico", "preco_hora"]
 
-    if not dados or any(campo not in dados for campo in obrigatorios):
+    if not isinstance(dados, dict) or any(campo not in dados for campo in obrigatorios):
         return jsonify({"erro": f"campos obrigatorios: {', '.join(obrigatorios)}"}), 400
 
     try:

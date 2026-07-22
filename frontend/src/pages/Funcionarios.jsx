@@ -129,7 +129,7 @@ export default function Funcionarios() {
           <div className="ticket">
             <div className="ticket-title">Funcionários cadastrados</div>
             {loading ? (
-              <div className="loading-line">carregando manifesto…</div>
+              <div className="loading-line">carregando Muda Brasil…</div>
             ) : funcionarios.length === 0 ? (
               <div className="empty-state">Nenhum funcionário cadastrado ainda.</div>
             ) : (

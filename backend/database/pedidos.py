@@ -32,12 +32,12 @@ class PedidosDatabase(BaseDatabase):
                       cidade_dest: str, estado_dest: str, endereco_dest: str | None,
                       cidade_part: str, estado_part: str, endereco_part: str | None,
                       aceite: bool, itens: list[dict]) -> dict:
-        "cria o pedido + cada servico solicitado + a equipe de cada servico, tudo numa sequencia; qualquer erro de trigger vira PedidoInvalido com mensagem clara"
+        "cria o pedido + cada servico solicitado + a equipe de cada servico, tudo numa unica transacao (tudo-ou-nada)"
         if not itens:
             raise PedidoInvalido("O pedido precisa de pelo menos um servico solicitado")
 
         try:
-            pedido = self.db.execute_insert_returning(
+            pedido = self.db.executar_returning_na_transacao(
                 """INSERT INTO pedidos (data_solicitacao, aceite, id_empresa, cod_cliente,
                     cidade_dest, estado_dest, endereco_dest, cidade_part, estado_part, endereco_part)
                    VALUES (CURRENT_DATE, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -45,38 +45,45 @@ class PedidosDatabase(BaseDatabase):
                 (aceite, id_empresa, cod_cliente, cidade_dest, estado_dest.upper(),
                  endereco_dest, cidade_part, estado_part.upper(), endereco_part),
             )
-        except Exception as erro:
-            # pega o trigger (d): cidade de destino/partida fora da area de atuacao da empresa
-            raise PedidoInvalido(_mensagem_amigavel(erro)) from erro
+            codigo = pedido["codigo"]
 
-        codigo = pedido["codigo"]
-
-        for item in itens:
-            try:
-                solicitacao = self.db.execute_insert_returning(
-                    "INSERT INTO solicitam (codigo_pedido, nome_servico, tempo_duracao, carga) "
-                    "VALUES (%s, %s, %s, %s) RETURNING id_solicitacao",
-                    (codigo, item["nome_servico"], item["tempo_duracao"], item.get("carga")),
-                )
-            except Exception as erro:
-                # pega o trigger (c): empresa nao oferece esse servico na cidade de destino
-                raise PedidoInvalido(
-                    f"Nao foi possivel adicionar '{item['nome_servico']}': "
-                    f"a empresa nao oferece esse servico na cidade de destino."
-                ) from erro
-
-            id_solicitacao = solicitacao["id_solicitacao"]
-
-            for cpf_func in item.get("funcionarios") or []:
+            for item in itens:
                 try:
-                    self.db.execute_statement(
-                        "INSERT INTO atendimento (id_solicitacao, cpf_func) VALUES (%s, %s)",
-                        (id_solicitacao, cpf_func),
+                    solicitacao = self.db.executar_returning_na_transacao(
+                        "INSERT INTO solicitam (codigo_pedido, nome_servico, tempo_duracao, carga) "
+                        "VALUES (%s, %s, %s, %s) RETURNING id_solicitacao",
+                        (codigo, item["nome_servico"], item["tempo_duracao"], item.get("carga")),
                     )
                 except Exception as erro:
+                    # pega o trigger (c): empresa nao oferece esse servico na cidade de destino
                     raise PedidoInvalido(
-                        f"Nao foi possivel atribuir o funcionario ao servico '{item['nome_servico']}'."
+                        f"Nao foi possivel adicionar '{item['nome_servico']}': "
+                        f"a empresa nao oferece esse servico na cidade de destino."
                     ) from erro
+
+                id_solicitacao = solicitacao["id_solicitacao"]
+
+                for cpf_func in item.get("funcionarios") or []:
+                    try:
+                        self.db.executar_na_transacao(
+                            "INSERT INTO atendimento (id_solicitacao, cpf_func) VALUES (%s, %s)",
+                            (id_solicitacao, cpf_func),
+                        )
+                    except Exception as erro:
+                        raise PedidoInvalido(
+                            f"Nao foi possivel atribuir o funcionario ao servico '{item['nome_servico']}'."
+                        ) from erro
+
+        except PedidoInvalido:
+            self.db.rollback()
+            raise
+        except Exception as erro:
+            # pega o trigger (d) e qualquer outro erro no INSERT do pedido em si
+            self.db.rollback()
+            raise PedidoInvalido(_mensagem_amigavel(erro)) from erro
+
+        # so chega aqui se TODOS os passos deram certo -> agora sim grava tudo de vez
+        self.db.commit()
 
         pedido_final = self.db.execute_select_one(
             "SELECT preco_total FROM pedidos WHERE codigo = %s", (codigo,)
