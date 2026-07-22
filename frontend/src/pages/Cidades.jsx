@@ -48,7 +48,7 @@ export default function Cidades() {
           <h1>Cidades</h1>
           <p className="page-sub">
             Toda rota, oferta de serviço e pedido referencia uma cidade cadastrada aqui —
-            é a base geográfica de todo o manifesto.
+            é a base geográfica de todo o Muda Brasil.
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function Cidades() {
             />
           </div>
           {loading ? (
-            <div className="loading-line">carregando manifesto…</div>
+            <div className="loading-line">carregando Muda Brasil…</div>
           ) : filtradas.length === 0 ? (
             <div className="empty-state">Nenhuma cidade encontrada.</div>
           ) : (

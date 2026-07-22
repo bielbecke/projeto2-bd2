@@ -153,11 +153,11 @@ export default function Pedidos() {
     <div>
       <div className="page-header">
         <div>
-          <p className="page-eyebrow">Manifesto de despacho</p>
+          <p className="page-eyebrow">Registro de pedidos</p>
           <h1>Pedidos</h1>
           <p className="page-sub">
             O preço de cada serviço solicitado e o preço total do pedido são sempre
-            recalculados pelo banco — a interface nunca envia esses valores.
+            recalculados pelo banco.
           </p>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function Pedidos() {
       <div className="grid-2">
         <div>
           {loading ? (
-            <div className="loading-line">carregando manifesto…</div>
+            <div className="loading-line">carregando Muda Brasil…</div>
           ) : pedidos.length === 0 ? (
             <div className="ticket empty-state">Nenhum pedido cadastrado ainda.</div>
           ) : (

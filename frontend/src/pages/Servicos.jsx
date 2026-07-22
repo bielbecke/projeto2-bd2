@@ -155,7 +155,7 @@ export default function Servicos() {
           <div className="ticket">
             <div className="ticket-title">Serviços cadastrados</div>
             {loading ? (
-              <div className="loading-line">carregando manifesto…</div>
+              <div className="loading-line">carregando Muda Brasil…</div>
             ) : servicos.length === 0 ? (
               <div className="empty-state">Nenhum serviço cadastrado ainda.</div>
             ) : (

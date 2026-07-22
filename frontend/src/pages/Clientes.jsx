@@ -67,7 +67,7 @@ export default function Clientes() {
             />
           </div>
           {loading ? (
-            <div className="loading-line">carregando manifesto…</div>
+            <div className="loading-line">carregando Muda Brasil…</div>
           ) : filtrados.length === 0 ? (
             <div className="empty-state">Nenhum cliente encontrado.</div>
           ) : (

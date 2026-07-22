@@ -58,7 +58,7 @@ export default function Empresas() {
         <div className="ticket">
           <div className="ticket-title">Empresas cadastradas</div>
           {loading ? (
-            <div className="loading-line">carregando manifesto…</div>
+            <div className="loading-line">carregando Muda Brasil…</div>
           ) : empresas.length === 0 ? (
             <div className="empty-state">Nenhuma empresa cadastrada ainda.</div>
           ) : (
