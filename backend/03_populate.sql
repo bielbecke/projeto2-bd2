@@ -1,6 +1,3 @@
--- =====================================================================
--- POPULACAO DAS TABELAS (dataset ampliado)
--- =====================================================================
 
 INSERT INTO empresas (nome, endereco) VALUES
 ('TransLog Brasil', 'Avenida Brigadeiro Faria Lima, 1106 - Sao Paulo/SP - CEP 04538-133'),
@@ -435,6 +432,3 @@ INSERT INTO atendimento (id_solicitacao, cpf_func) VALUES
 (79, '304.936.571-54'),
 (80, '985.171.891-45');
 
--- Conferencia esperada apos rodar este script com os triggers de 02_triggers.sql:
--- SELECT ROUND(SUM(preco_total),2) FROM pedidos;  --> 198410.33
--- 70 pedidos, 80 solicitacoes de servico, todos com preco_total = SUM(solicitam.preco)
