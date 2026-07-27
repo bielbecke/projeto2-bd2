@@ -29,17 +29,17 @@ class DashboardDatabase(BaseDatabase):
 
     def valor_por_cidade(self):
         return self.db.execute_select_all("""
-            SELECT p.cidade_dest || '/' || p.estado_dest AS cidade, SUM(s.preco) AS valor
-            FROM solicitam s JOIN pedidos p ON p.codigo = s.codigo_pedido
-            GROUP BY p.cidade_dest, p.estado_dest
+            SELECT cidade_dest || '/' || estado_dest AS cidade, SUM(preco_total) AS valor
+            FROM pedidos
+            GROUP BY cidade_dest, estado_dest
             ORDER BY valor DESC
         """)
 
     def top_cidades_valor(self):
         return self.db.execute_select_all("""
-            SELECT p.cidade_dest || '/' || p.estado_dest AS cidade, SUM(s.preco) AS valor
-            FROM solicitam s JOIN pedidos p ON p.codigo = s.codigo_pedido
-            GROUP BY p.cidade_dest, p.estado_dest
+            SELECT cidade_dest || '/' || estado_dest AS cidade, SUM(preco_total) AS valor
+            FROM pedidos
+            GROUP BY cidade_dest, estado_dest
             ORDER BY valor DESC LIMIT 5
         """)
 
@@ -63,9 +63,8 @@ class DashboardDatabase(BaseDatabase):
 
     def top_empresas_valor(self):
         return self.db.execute_select_all("""
-            SELECT e.nome, SUM(s.preco) AS valor
-            FROM solicitam s
-            JOIN pedidos p ON p.codigo = s.codigo_pedido
+            SELECT e.nome, SUM(p.preco_total) AS valor
+            FROM pedidos p
             JOIN empresas e ON e.id_empresa = p.id_empresa
             WHERE p.aceite = TRUE AND p.data_resolucao IS NOT NULL
             GROUP BY e.id_empresa, e.nome
