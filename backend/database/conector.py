@@ -23,10 +23,6 @@ class DatabaseManager:
             self.cursor.execute(statement, params)
             self.conn.commit()
         except Exception:
-            # sem isso, uma unica query com erro (ex: um trigger recusando
-            # a insercao) deixa a conexao "presa" numa transacao abortada,
-            # e TODAS as proximas requisicoes passam a falhar ate reiniciar
-            # o servidor -- o rollback devolve a conexao pra um estado usavel
             self.conn.rollback()
             raise
 
@@ -41,12 +37,6 @@ class DatabaseManager:
             self.conn.rollback()
             raise
 
-    # ------------------------------------------------------------------
-    # Variantes SEM commit automatico, para operacoes de varios passos que
-    # precisam ser tudo-ou-nada (ex: criar um pedido junto com seus itens e
-    # sua equipe). O chamador decide quando dar commit() ou rollback() --
-    # so depois que TODOS os passos derem certo.
-    # ------------------------------------------------------------------
     def executar_na_transacao(self, statement: str, params: tuple = ()) -> None:
         "como execute_statement, mas sem commitar"
         self.cursor.execute(statement, params)

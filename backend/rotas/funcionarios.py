@@ -31,7 +31,6 @@ def criar_funcionario():
     return jsonify(resultado), 201
 
 
-# ---------------- vinculos: funcionario x empresa (N:N com periodo) ----------------
 @funcionarios_blueprint.route("/funcionarios/vinculos", methods=["GET"])
 def get_vinculos():
     return jsonify(FuncionariosDatabase().get_vinculos()), 200

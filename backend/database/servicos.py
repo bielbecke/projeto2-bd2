@@ -36,7 +36,6 @@ class ServicosDatabase(BaseDatabase):
 
         return {"nome_servico": nome_servico}
 
-    # ---------------- oferece: empresa x cidade x servico -> preco/hora ----------------
     def criar_oferta(self, id_empresa: int, nome_cidade: str, estado: str,
                       nome_servico: str, preco_hora: float) -> dict:
         self.db.execute_statement(

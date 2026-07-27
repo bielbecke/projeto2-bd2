@@ -42,7 +42,7 @@ CREATE TABLE transportes (
     limite_carga   NUMERIC(12,2)
 );
 
--- atributo multivalorado "Acrescimo" de Transportes (faixas de carga x percentual)
+-- atributo multivalorado "Acrescimo" de Transportes
 CREATE TABLE acrescimos_transporte (
     id_acrescimo   SERIAL PRIMARY KEY,
     nome_servico   VARCHAR(80) NOT NULL REFERENCES transportes(nome_servico) ON DELETE CASCADE,
@@ -51,7 +51,7 @@ CREATE TABLE acrescimos_transporte (
     UNIQUE(nome_servico, limite_carga)
 );
 
--- relacionamento ternario Empresas / Cidades / Servicos, com atributo PrecoHoraSe
+-- relacionamento ternario Empresas / Cidades / Servicos, com atributo PrecoHora
 CREATE TABLE oferece (
     id_oferta     SERIAL PRIMARY KEY,
     id_empresa    INTEGER NOT NULL REFERENCES empresas(id_empresa),
@@ -146,19 +146,12 @@ CREATE INDEX idx_pedidos_cidadedest ON pedidos(cidade_dest, estado_dest);
 CREATE INDEX idx_trabalha_em_func  ON trabalha_em(cpf_func);
 CREATE INDEX idx_atendimento_func  ON atendimento(cpf_func);
 
--- indice parcial para a consulta (vi): so indexa pedidos que sao "servico
--- executado" (aceite E ja resolvido). Testado com EXPLAIN ANALYZE em 10 mil
--- linhas: sem este indice a consulta fazia Seq Scan + Filter em toda a
--- tabela pedidos (3.3ms); com ele, Index Scan direto nas ~poucas linhas
--- que interessam (2.1ms, ~35% mais rapido, e a vantagem cresce com o
--- volume porque o filtro elimina a maior parte das linhas)
+
 CREATE INDEX idx_pedidos_executados ON pedidos(id_empresa)
     WHERE aceite = TRUE AND data_resolucao IS NOT NULL;
 
--- FK que o Postgres NAO indexa automaticamente (so PK/UNIQUE ganham
--- indice automatico): usado toda vez que se lista telefones de um cliente
+
 CREATE INDEX idx_telefone_cliente_cliente ON telefone_cliente(cod_cliente);
 
--- usado pelo trigger de calculo de preco (item c) a cada INSERT em
--- solicitam, para achar a faixa de acrescimo certa por carga
+
 CREATE INDEX idx_acrescimos_transporte_servico ON acrescimos_transporte(nome_servico, limite_carga);

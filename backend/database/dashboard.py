@@ -57,7 +57,7 @@ class DashboardDatabase(BaseDatabase):
             FROM solicitam s
             JOIN pedidos p ON p.codigo = s.codigo_pedido
             JOIN empresas e ON e.id_empresa = p.id_empresa
-            GROUP BY e.id_empresa, e.nome
+            GROUP BY e.id_empresa
             ORDER BY qtd DESC LIMIT 5
         """)
 

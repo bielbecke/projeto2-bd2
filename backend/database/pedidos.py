@@ -55,7 +55,6 @@ class PedidosDatabase(BaseDatabase):
                         (codigo, item["nome_servico"], item["tempo_duracao"], item.get("carga")),
                     )
                 except Exception as erro:
-                    # pega o trigger (c): empresa nao oferece esse servico na cidade de destino
                     raise PedidoInvalido(
                         f"Nao foi possivel adicionar '{item['nome_servico']}': "
                         f"a empresa nao oferece esse servico na cidade de destino."
@@ -78,11 +77,9 @@ class PedidosDatabase(BaseDatabase):
             self.db.rollback()
             raise
         except Exception as erro:
-            # pega o trigger (d) e qualquer outro erro no INSERT do pedido em si
             self.db.rollback()
             raise PedidoInvalido(_mensagem_amigavel(erro)) from erro
 
-        # so chega aqui se TODOS os passos deram certo -> agora sim grava tudo de vez
         self.db.commit()
 
         pedido_final = self.db.execute_select_one(
