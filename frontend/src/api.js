@@ -32,22 +32,21 @@ async function request(path, { method = "GET", body } = {}) {
 
 export { ApiError };
 
-/* ---------------------------- cidades ---------------------------- */
+
 export const getCidades = () => request("/cidades");
 export const criarCidade = (nome_cidade, estado) =>
   request("/cidades", { method: "POST", body: { nome_cidade, estado } });
 
-/* ---------------------------- clientes ---------------------------- */
+
 export const getClientes = () => request("/clientes");
 export const criarCliente = (payload) =>
   request("/clientes", { method: "POST", body: payload });
 
-/* ---------------------------- empresas ---------------------------- */
+
 export const getEmpresas = () => request("/empresas");
 export const criarEmpresa = (payload) =>
   request("/empresas", { method: "POST", body: payload });
 
-/* --------------------------- funcionarios --------------------------- */
 export const getFuncionarios = (id_empresa) =>
   request(id_empresa ? `/funcionarios?id_empresa=${id_empresa}` : "/funcionarios");
 export const criarFuncionario = (payload) =>
@@ -58,7 +57,7 @@ export const criarVinculo = (payload) =>
 export const encerrarVinculo = (id_empresa, cpf_func) =>
   request(`/funcionarios/vinculos/${id_empresa}/${cpf_func}/encerrar`, { method: "PATCH" });
 
-/* ---------------------------- serviços ---------------------------- */
+
 export const getServicos = () => request("/servicos");
 export const criarServico = (payload) =>
   request("/servicos", { method: "POST", body: payload });
@@ -73,7 +72,7 @@ export const getOfertas = ({ id_empresa, nome_cidade, estado } = {}) => {
 export const criarOferta = (payload) =>
   request("/oferece", { method: "POST", body: payload });
 
-/* ---------------------------- pedidos ---------------------------- */
+
 export const getPedidos = () => request("/pedidos");
 export const criarPedido = (payload) =>
   request("/pedidos", { method: "POST", body: payload });
@@ -85,7 +84,7 @@ export const atribuirFuncionario = (id_solicitacao, cpf_func) =>
     body: { cpf_func },
   });
 
-/* ---------------------------- dashboard ---------------------------- */
+
 export const getResumo = async () => {
   const data = await request("/dashboard/resumo");
   return { ...data, faturado: Number(data.faturado) };

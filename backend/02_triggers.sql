@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE FUNCTION fn_check_disjuncao_guindaste()
+CREATE OR REPLACE FUNCTION disjuncao_guindaste()
 RETURNS TRIGGER AS $$
 BEGIN
     IF EXISTS (SELECT 1 FROM transportes WHERE nome_servico = NEW.nome_servico) THEN
@@ -10,11 +10,43 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_guindaste_disjoint
+CREATE TRIGGER guindaste_disjoint
 BEFORE INSERT ON guindastes
-FOR EACH ROW EXECUTE FUNCTION fn_check_disjuncao_guindaste();
+FOR EACH ROW EXECUTE FUNCTION disjuncao_guindaste();
 
-CREATE OR REPLACE FUNCTION fn_check_disjuncao_transporte()
+
+CREATE OR REPLACE FUNCTION fn_valida_cidades_pedido()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM oferece
+        WHERE id_empresa = NEW.id_empresa
+          AND nome_cidade = NEW.cidade_dest AND estado = NEW.estado_dest
+    ) THEN
+        RAISE EXCEPTION 'A empresa % nao presta servicos em %/% (cidade de destino).',
+            NEW.id_empresa, NEW.cidade_dest, NEW.estado_dest;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM oferece
+        WHERE id_empresa = NEW.id_empresa
+          AND nome_cidade = NEW.cidade_part AND estado = NEW.estado_part
+    ) THEN
+        RAISE EXCEPTION 'A empresa % nao presta servicos em %/% (cidade de partida).',
+            NEW.id_empresa, NEW.cidade_part, NEW.estado_part;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_valida_cidades_pedido
+BEFORE INSERT OR UPDATE OF id_empresa, cidade_dest, estado_dest, cidade_part, estado_part ON pedidos
+FOR EACH ROW EXECUTE FUNCTION fn_valida_cidades_pedido();
+
+
+
+CREATE OR REPLACE FUNCTION disjuncao_transporte()
 RETURNS TRIGGER AS $$
 BEGIN
     IF EXISTS (SELECT 1 FROM guindastes WHERE nome_servico = NEW.nome_servico) THEN
@@ -27,7 +59,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_transporte_disjoint
 BEFORE INSERT ON transportes
-FOR EACH ROW EXECUTE FUNCTION fn_check_disjuncao_transporte();
+FOR EACH ROW EXECUTE FUNCTION disjuncao_transporte();
 
 CREATE OR REPLACE FUNCTION fn_desmarca_especializacao()
 RETURNS TRIGGER AS $$
@@ -103,48 +135,5 @@ CREATE TRIGGER trg_total_pedido
 AFTER INSERT OR UPDATE OF preco OR DELETE ON solicitam
 FOR EACH ROW EXECUTE FUNCTION fn_atualiza_total_pedido();
 
-CREATE OR REPLACE FUNCTION fn_bloqueia_update_manual_total()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.preco_total <> OLD.preco_total AND
-       NOT EXISTS (SELECT 1 FROM solicitam WHERE codigo_pedido = NEW.codigo AND
-                   NEW.preco_total = (SELECT COALESCE(SUM(preco),0) FROM solicitam WHERE codigo_pedido = NEW.codigo)) THEN
-        RAISE EXCEPTION 'preco_total nao pode ser alterado manualmente; ele e derivado de solicitam.';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_bloqueia_total_manual
-BEFORE UPDATE OF preco_total ON pedidos
-FOR EACH ROW EXECUTE FUNCTION fn_bloqueia_update_manual_total();
 
 
-CREATE OR REPLACE FUNCTION fn_valida_cidades_pedido()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM oferece
-        WHERE id_empresa = NEW.id_empresa
-          AND nome_cidade = NEW.cidade_dest AND estado = NEW.estado_dest
-    ) THEN
-        RAISE EXCEPTION 'A empresa % nao presta servicos em %/% (cidade de destino).',
-            NEW.id_empresa, NEW.cidade_dest, NEW.estado_dest;
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM oferece
-        WHERE id_empresa = NEW.id_empresa
-          AND nome_cidade = NEW.cidade_part AND estado = NEW.estado_part
-    ) THEN
-        RAISE EXCEPTION 'A empresa % nao presta servicos em %/% (cidade de partida).',
-            NEW.id_empresa, NEW.cidade_part, NEW.estado_part;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_valida_cidades_pedido
-BEFORE INSERT OR UPDATE OF id_empresa, cidade_dest, estado_dest, cidade_part, estado_part ON pedidos
-FOR EACH ROW EXECUTE FUNCTION fn_valida_cidades_pedido();
